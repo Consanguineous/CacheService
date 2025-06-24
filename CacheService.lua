@@ -1,6 +1,7 @@
 --!strict
 
 local CacheService = {}
+--{@CreateCacheFolder: Creates a new cachedfolder with an optional tag. Tag set to Untagged if none.}
 
 -- Union type for allowed locations 
 export type ValidCacheLocation = ServerScriptService | ReplicatedStorage
