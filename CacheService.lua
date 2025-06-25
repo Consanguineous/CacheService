@@ -1,7 +1,6 @@
 --!strict
 
 local CacheService = {}
---{@CreateCacheFolder: Creates a new cachedfolder with an optional tag. Tag set to Untagged if none.}
 
 -- Union type for allowed locations 
 export type ValidCacheLocation = ServerScriptService | ReplicatedStorage
@@ -13,11 +12,11 @@ type FolderStruct = {
     Tag: string?
 }
 
-type Void = (...any) -> nil
+type Void = (...any) -> ()
 
 function CacheService:CreateCacheFolder(FolderName: string, Location: ValidCacheLocation, tag: string?): FolderStruct
     local CachedFolder = Instance.new("Folder")
-    if FolderName == "" or nil then
+    if not FolderName or FolderName == "" then
         warn("FolderName cannot be empty or nil.")
         return
     end
@@ -53,10 +52,10 @@ function CacheService:AddToCache(What: Instance, FolderName: string, Location: V
     end
 end
 
-function CacheService:RemoveFromCache(What: Instance, FolderName: string, Location: ValidCacheLocation): boolean
+function CacheService:RemoveFromCache(What: Instance, FolderName: string, Location: ValidCacheLocation): boolean --#Completely removes instance altogther, But also from Cache#
     local SelectedFolder = Location:FindFirstChild(FolderName)
     if SelectedFolder and SelectedFolder:IsA("Folder") then
-        if What.Parent == SelectedFolder then
+        if (What.Parent == SelectedFolder) then
             What.Parent = nil
             return true
         else
@@ -97,38 +96,36 @@ function CacheService:DestroyCache(FolderName: string, Location: ValidCacheLocat
     end
 end
 
-function CacheService:MergeCache(Cache1: Folder, Cache2: Folder): Void --Cache1: First cache folder, Cache2: Second cache folder Cache1 -> Cache2
-    if not Cache1:IsA("Folder") or not Cache2:IsA("Folder") then
-        warn("Both arguments must be Folder instances.", debug.traceback("MergeCache traceback: "))
-        return
-    end
+function CacheService:MergeCache(cache1: Folder, cache2: Folder): Void
+    assert(cache1:IsA("Folder") and cache2:IsA("Folder"), 
+        "[CacheService.MergeCache] Both arguments must be Folder instances."
+    )
     
-    for _, child in ipairs(Cache1:GetChildren()) do
-        if not Cache2:FindFirstChild(child.Name) then
-            child.Parent = Cache2
+    for _, child in ipairs(cache1:GetChildren()) do
+        if not cache2:FindFirstChild(child.Name) then
+            child.Parent = cache2
         else
-            warn("Child '" .. child.Name .. "' already exists in the second cache folder.")
+            warn(("[CacheService.MergeCache] Duplicate child '%s' ignored."):format(child.Name))
         end
     end
 end
 
 function CacheService:ReturnCacheContents(WhichCache: Folder): { Instance }
     if not WhichCache:IsA("Folder") then
-        warn("Argument is not a Folder.")
-        return {}
+        warn("Argument is not a Folder.", debug.traceback("ReturnCacheContents traceback: "))
+        return {} --#Dummy cache contents
     end
 
-    local CacheContents = WhichCache:GetChildren()
-    if #CacheContents == 0 then
-        warn("Cache folder '" .. WhichCache.Name .. "' is empty.")
-    end
+    local CacheChildren = WhichCache:GetChildren()
 
-    return CacheContents
+
+    return CacheChildren
+
 end
-
+--#ClearCacheContent
 function CacheService:ClearCacheContents(WhichCache: Folder): Void
     if not WhichCache:IsA("Folder") then
-        warn("Argument is not a Folder.")
+        warn("Argument is not a Folder.", debug.traceback("ClearCacheContents traceback: "))
         return
     end
 
